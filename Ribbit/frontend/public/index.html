@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ribbit - AI Voice Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Professional minimal gradient background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(135deg,
+                    rgba(15, 15, 15, 1) 0%,
+                    rgba(25, 25, 35, 0.9) 25%,
+                    rgba(35, 35, 55, 0.8) 50%,
+                    rgba(25, 25, 35, 0.9) 75%,
+                    rgba(15, 15, 15, 1) 100%);
+            pointer-events: none;
+            z-index: -2;
+        }
+
+        /* Subtle accent overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Main app container */
+        .app {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Glassmorphism effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Header with perfect alignment */
+        .app-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 4px 12px rgba(99, 102, 241, 0.3),
+                0 2px 6px rgba(139, 92, 246, 0.2);
+            color: white;
+            font-size: 18px;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+            border-radius: 12px;
+        }
+
+        .logo-icon svg {
+            width: 20px;
+            height: 20px;
+            z-index: 1;
+            position: relative;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin: 0;
+            background: linear-gradient(135deg, #ffffff 0%, #e5e7eb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        /* Settings Button - Fixed positioning */
+        .settings-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .settings-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            width: 300px;
+            z-index: 100;
+            animation: slideIn 0.3s ease;
+        }
+
+        .settings-content {
+            padding: 24px;
+        }
+
+        .settings-content h3 {
+            color: white;
+            margin-bottom: 24px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Main content area - perfectly centered */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 32px;
+        }
+
+        /* Voice Control - centered vertically and horizontally */
+        .voice-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Status indicator - fixed height for consistent layout */
+        .status-indicator {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 12px 24px;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .status.listening {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.4);
+            animation: statusPulse 2s infinite;
+        }
+
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .processing {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: white;
+            font-weight: 500;
+            padding: 12px 24px;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            flex-shrink: 0;
+        }
+
+        /* Microphone button - perfectly centered */
+        .mic-button {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            flex-shrink: 0;
+        }
+
+        .mic-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .mic-button.recording {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        .mic-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .mic-button svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        /* Language display - consistent styling */
+        .language-display {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* Language Selector */
+        .language-selector {
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .language-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .language-dropdown {
+            position: relative;
+        }
+
+        .language-button {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: inherit;
+            outline: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .language-button:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .language-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        .language-name {
+            font-weight: 500;
+            font-size: 14px;
+            color: white;
+        }
+
+        .language-native {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 400;
+        }
+
+        .chevron {
+            transition: transform 0.2s ease;
+            color: rgba(255, 255, 255, 0.7);
+            flex-shrink: 0;
+        }
+
+        /* Clear Button */
+        .clear-btn {
+            background: rgba(255, 59, 59, 0.2);
+            border: 1px solid rgba(255, 59, 59, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            font-family: inherit;
+            outline: none;
+            font-weight: 500;
+        }
+
+        .clear-btn:hover {
+            background: rgba(255, 59, 59, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .clear-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes statusPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Selection styles */
+        ::selection {
+            background: rgba(99, 102, 241, 0.3);
+            color: #ffffff;
+        }
+
+        ::-moz-selection {
+            background: rgba(99, 102, 241, 0.3);
+            color: #ffffff;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .app {
+                padding: 15px;
+            }
+
+            .app-container {
+                min-height: 500px;
+            }
+
+            .app-header {
+                padding: 20px 24px;
+            }
+
+            .main-content {
+                padding: 32px 24px;
+            }
+
+            .logo h1 {
+                font-size: 24px;
+            }
+
+            .logo-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .logo-icon svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .settings-panel {
+                width: 280px;
+                right: 15px;
+            }
+
+            .voice-control {
+                gap: 28px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app {
+                padding: 10px;
+            }
+
+            .app-container {
+                min-height: 450px;
+            }
+
+            .app-header {
+                padding: 16px 20px;
+            }
+
+            .main-content {
+                padding: 24px 20px;
+            }
+
+            .logo h1 {
+                font-size: 20px;
+            }
+
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .logo-icon svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .settings-panel {
+                width: 260px;
+                right: 10px;
+            }
+
+            .voice-control {
+                gap: 24px;
+            }
+
+            .mic-button {
+                width: 70px;
+                height: 70px;
+            }
+
+            .mic-button svg {
+                width: 28px;
+                height: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function VoiceAssistant() {
+            const [isListening, setIsListening] = useState(false);
+            const [isProcessing, setIsProcessing] = useState(false);
+            const [showSettings, setShowSettings] = useState(false);
+
+            const handleMicClick = () => {
+                if (isListening) {
+                    setIsListening(false);
+                    setIsProcessing(true);
+                    setTimeout(() => setIsProcessing(false), 2000);
+                } else {
+                    setIsListening(true);
+                }
+            };
+
+            const getStatusContent = () => {
+                if (isProcessing) {
+                    return (
+                        <div className="processing">
+                            <div className="spinner"></div>
+                            <span>Processing...</span>
+                        </div>
+                    );
+                }
+
+                if (isListening) {
+                    return (
+                        <div className="status listening">
+                            <svg className="status-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" fill="currentColor"/>
+                                <path d="M19 10v1a7 7 0 0 1-14 0v-1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                <line x1="12" y1="19" x2="12" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                <line x1="8" y1="23" x2="16" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            <span>Listening...</span>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div className="status">
+                        <svg className="status-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" fill="currentColor"/>
+                            <path d="M19 10v1a7 7 0 0 1-14 0v-1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            <line x1="12" y1="19" x2="12" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            <line x1="8" y1="23" x2="16" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                        <span>Ready to listen</span>
+                    </div>
+                );
+            };
+
+            // Effect to handle clicks outside the settings panel
+            useEffect(() => {
+                const handleClickOutside = (event) => {
+                    if (showSettings && !event.target.closest('.settings-panel') && !event.target.closest('.settings-btn')) {
+                        setShowSettings(false);
+                    }
+                };
+
+                document.addEventListener('mousedown', handleClickOutside);
+                return () => {
+                    document.removeEventListener('mousedown', handleClickOutside);
+                };
+            }, [showSettings]);
+
+            return (
+                <div className="app">
+                    <div className="app-container glass">
+                        <header className="app-header">
+                            <div className="header-content">
+                                <div className="logo">
+                                    <div className="logo-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                                            <circle cx="12" cy="3" r="1.5" fill="currentColor"/>
+                                            <circle cx="12" cy="21" r="1.5" fill="currentColor"/>
+                                            <circle cx="3" cy="12" r="1.5" fill="currentColor"/>
+                                            <circle cx="21" cy="12" r="1.5" fill="currentColor"/>
+                                            <circle cx="6.34" cy="6.34" r="1" fill="currentColor"/>
+                                            <circle cx="17.66" cy="17.66" r="1" fill="currentColor"/>
+                                            <circle cx="6.34" cy="17.66" r="1" fill="currentColor"/>
+                                            <circle cx="17.66" cy="6.34" r="1" fill="currentColor"/>
+                                            <line x1="12" y1="9" x2="12" y2="4.5" stroke="currentColor" strokeWidth="1" opacity="0.6"/>
+                                            <line x1="12" y1="15" x2="12" y2="19.5" stroke="currentColor" strokeWidth="1" opacity="0.6"/>
+                                            <line x1="9" y1="12" x2="4.5" y2="12" stroke="currentColor" strokeWidth="1" opacity="0.6"/>
+                                            <line x1="15" y1="12" x2="19.5" y2="12" stroke="currentColor" strokeWidth="1" opacity="0.6"/>
+                                            <line x1="10.06" y1="10.06" x2="7.05" y2="7.05" stroke="currentColor" strokeWidth="1" opacity="0.4"/>
+                                            <line x1="13.94" y1="13.94" x2="16.95" y2="16.95" stroke="currentColor" strokeWidth="1" opacity="0.4"/>
+                                            <line x1="10.06" y1="13.94" x2="7.05" y2="16.95" stroke="currentColor" strokeWidth="1" opacity="0.4"/>
+                                            <line x1="13.94" y1="10.06" x2="16.95" y2="7.05" stroke="currentColor" strokeWidth="1" opacity="0.4"/>
+                                        </svg>
+                                    </div>
+                                    <h1>Ribbit</h1>
+                                </div>
+                                <button className="settings-btn" onClick={() => setShowSettings(!showSettings)}>
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="2"/>
+                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" strokeWidth="2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </header>
+
+                        {showSettings && (
+                            <div className="settings-panel glass">
+                                <div className="settings-content">
+                                    <h3>Settings</h3>
+                                    <div className="language-selector">
+                                        <div className="language-label">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
+                                            </svg>
+                                            Language
+                                        </div>
+                                        <div className="language-dropdown">
+                                            <button className="language-button">
+                                                <div className="language-info">
+                                                    <div className="language-name">English (US)</div>
+                                                    <div className="language-native">English</div>
+                                                </div>
+                                                <svg className="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button className="clear-btn">
+                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                        </svg>
+                                        Clear History
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="main-content">
+                            <div className="voice-control">
+                                <div className="status-indicator">
+                                    {getStatusContent()}
+                                </div>
+
+                                <button
+                                    className={`mic-button ${isListening ? 'recording' : ''}`}
+                                    onClick={handleMicClick}
+                                    disabled={isProcessing}
+                                >
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" fill="currentColor"/>
+                                        <path d="M19 10v1a7 7 0 0 1-14 0v-1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                        <line x1="12" y1="19" x2="12" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                        <line x1="8" y1="23" x2="16" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                    </svg>
+                                </button>
+
+                                <div className="language-display">
+                                    English (US)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render the app
+        ReactDOM.render(<VoiceAssistant />, document.getElementById('root'));
+    </script>
+</body>
+</html>
